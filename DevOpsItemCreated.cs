@@ -34,20 +34,11 @@ namespace lms
 
             string messageContent = $"{data}";
 
+            HttpClient client = new HttpClient();
+
+            client.PostAsync("https://webhook-test.com/644eadb4db900ca09c8ec44ad50fa865", data);
+
+            //var responseString = await response.Content.ReadAsStringAsync();
             return new OkObjectResult(messageContent);
-        }
-
-            //[Function("DevOpsItemCreated")]
-            //public IActionResult Run([HttpTrigger(AuthorizationLevel.Function, "get", "post")] HttpRequest req)
-            //{
-            //    _logger.LogInformation("ThirdParty Payload has been captured...");
-
-            //    string requestBody = new StreamReader(req.Body).ReadA();
-            //    dynamic data = JsonConvert.DeserializeObject(requestBody);
-
-            //    string messageContent = $"{data}";
-
-            //    return new OkObjectResult(messageContent);
-            //}
         }
     }
