@@ -1,8 +1,14 @@
+using Azure.Core;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
+using System.Net;
+using System.Net.Http;
+using System.Net.Http.Headers;
+using System.Net.Mime;
+using System.Text;
 
 namespace lms
 {
@@ -36,10 +42,27 @@ namespace lms
 
             HttpClient client = new HttpClient();
 
-            client.PostAsync("https://webhook-test.com/644eadb4db900ca09c8ec44ad50fa865", data);
+            var request = new HttpRequestMessage
+            {
+                Method = HttpMethod.Post,
+                RequestUri = new Uri("https://webhook.site/62403fa8-fc74-4249-8520-7f40b646fb3c"),
+                Content = new StringContent(
+                messageContent,
+                Encoding.UTF8,
+                MediaTypeNames.Application.Json), // or "application/json" in older versions
+            };
+
+            request.Headers.Add("Accept", "application/json");
+            
+            var response = await client.SendAsync(request)
+                .ConfigureAwait(false);
+            response.EnsureSuccessStatusCode();
+
+            var responseBody = await response.Content.ReadAsStringAsync()
+                .ConfigureAwait(false);
 
             //var responseString = await response.Content.ReadAsStringAsync();
-            return new OkObjectResult(messageContent);
+            return new OkObjectResult(responseBody);
         }
     }
 }
