@@ -23,16 +23,31 @@ namespace lms
         //}
 
         [Function("DevOpsItemCreated")]
-        public IActionResult Run([HttpTrigger(AuthorizationLevel.Function, "get", "post")] HttpRequest req)
+        public async Task<IActionResult> Run(
+            [HttpTrigger(AuthorizationLevel.Function, "get", "post", Route = null)] HttpRequest req,
+            ILogger log)
         {
             _logger.LogInformation("ThirdParty Payload has been captured...");
 
-            string requestBody = new StreamReader(req.Body).ReadToEnd();
-            dynamic data = JsonConvert.DeserializeObject(requestBody);
+            string requestBody = new StreamReader(req.Body).ReadToEndAsync().Result;
+            dynamic data = JsonConvert.ToString(requestBody);
 
             string messageContent = $"{data}";
 
             return new OkObjectResult(messageContent);
         }
+
+            //[Function("DevOpsItemCreated")]
+            //public IActionResult Run([HttpTrigger(AuthorizationLevel.Function, "get", "post")] HttpRequest req)
+            //{
+            //    _logger.LogInformation("ThirdParty Payload has been captured...");
+
+            //    string requestBody = new StreamReader(req.Body).ReadA();
+            //    dynamic data = JsonConvert.DeserializeObject(requestBody);
+
+            //    string messageContent = $"{data}";
+
+            //    return new OkObjectResult(messageContent);
+            //}
+        }
     }
-}
