@@ -23,12 +23,11 @@ namespace lms
         //}
 
         [Function("DevOpsItemCreated")]
-        public static async Task<IActionResult> Run(
-        [HttpTrigger(AuthorizationLevel.Function, "get", "post", Route = null)] HttpRequest req, ILogger log)
+        public IActionResult Run([HttpTrigger(AuthorizationLevel.Function, "get", "post")] HttpRequest req)
         {
-            log.LogInformation("ThirdParty Payload has been captured...");
+            _logger.LogInformation("ThirdParty Payload has been captured...");
 
-            string requestBody = await new StreamReader(req.Body).ReadToEndAsync();
+            string requestBody = new StreamReader(req.Body).ReadToEnd();
             dynamic data = JsonConvert.DeserializeObject(requestBody);
 
             string messageContent = $"{data}";
