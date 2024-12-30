@@ -84,14 +84,6 @@ namespace lms
             [HttpTrigger(AuthorizationLevel.Function, "get", "post", Route = null)] HttpRequest req,
             ILogger log)
         {
-            string requestBody = new StreamReader(req.Body).ReadToEndAsync().Result;
-            dynamic data = JsonConvert.ToString(requestBody);
-
-            DevOps? rootDevOpsItem = JsonConvert.DeserializeObject<DevOps>(requestBody);
-
-            _logger.LogInformation("Received DevOpsItem " + rootDevOpsItem.id);
-            string messageContent = $"{data}";
-
             //HttpClient client = new HttpClient();
 
             //var request = new HttpRequestMessage
@@ -117,8 +109,26 @@ namespace lms
 
             try
             {
-                _logger.LogInformation("Sending create Jira item request");
-                SendJiraRequest(rootDevOpsItem);
+                string requestBody = new StreamReader(req.Body).ReadToEndAsync().Result;
+                dynamic data = JsonConvert.ToString(requestBody);
+
+                _logger.LogInformation("DevOpsItemCreated Request Body: " + requestBody);
+
+                DevOps? rootDevOpsItem = JsonConvert.DeserializeObject<DevOps>(requestBody);
+
+                if (rootDevOpsItem != null)
+                {
+                    _logger.LogInformation("Received DevOpsItem " + rootDevOpsItem?.id);
+                    string messageContent = $"{data}";
+
+                    _logger.LogInformation("Sending create Jira item request");
+                    SendJiraRequest(rootDevOpsItem);
+                }
+                else
+                {
+                    _logger.LogInformation("DevOpsItemCreated: rootDevOpsItem is NULL");
+                }
+
             }
             catch (Exception)
             {
