@@ -84,8 +84,6 @@ namespace lms
             [HttpTrigger(AuthorizationLevel.Function, "get", "post", Route = null)] HttpRequest req,
             ILogger log)
         {
-            _logger.LogInformation("Received DevOpsItem " + );
-
             string requestBody = new StreamReader(req.Body).ReadToEndAsync().Result;
             dynamic data = JsonConvert.ToString(requestBody);
 
