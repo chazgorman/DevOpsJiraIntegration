@@ -71,11 +71,11 @@ namespace lms
                 //response.EnsureSuccessStatusCode();
                 //string responseBody = response.Content.ReadAsStringAsync();
 
-                Console.WriteLine(response.StatusCode);
+                _logger.LogInformation("Jira request response code: " + response.StatusCode);
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex.Message);
+                _logger.LogInformation("Exception sending Jira request: " + ex.Message);
             }
         }
 
@@ -84,13 +84,14 @@ namespace lms
             [HttpTrigger(AuthorizationLevel.Function, "get", "post", Route = null)] HttpRequest req,
             ILogger log)
         {
-            _logger.LogInformation("ThirdParty Payload has been captured...");
+            _logger.LogInformation("Received DevOpsItem " + );
 
             string requestBody = new StreamReader(req.Body).ReadToEndAsync().Result;
             dynamic data = JsonConvert.ToString(requestBody);
 
             DevOps? rootDevOpsItem = JsonConvert.DeserializeObject<DevOps>(requestBody);
 
+            _logger.LogInformation("Received DevOpsItem " + rootDevOpsItem.id);
             string messageContent = $"{data}";
 
             //HttpClient client = new HttpClient();
@@ -118,6 +119,7 @@ namespace lms
 
             try
             {
+                _logger.LogInformation("Sending create Jira item request");
                 SendJiraRequest(rootDevOpsItem);
             }
             catch (Exception)
