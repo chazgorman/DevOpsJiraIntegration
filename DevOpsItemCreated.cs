@@ -51,7 +51,9 @@ namespace lms
 
             HttpClient client = new HttpClient();
 
-            string token = @"ATATT3xFfGF0P5aTWd8ypqDBmR9o_Gx_HkG867ehaqbTZmT42Eco6P7CGkQZeSy9YvRAK6nHYJFEr9A7PNLvr8_BOeR-SAfNEMpR75P6FYEiyq2daLk8tJ98JGJzJAFABvCY8McEq5v1uErcyt2LAWWY3kSQhRsmcM09J5JW_TeIivd91EaCxus=D5B7CF5C";
+            string token = GetEnvironmentVariable("JiraToken").Split(':')[1].Trim();
+            _logger.LogInformation("Jira Token: " + token);
+
             //Putting the credentials as bytes.
             byte[] cred = UTF8Encoding.UTF8.GetBytes("chaz.gorman@gmail.com:" + token);
 
@@ -136,6 +138,12 @@ namespace lms
                 throw;
             }
             return new OkObjectResult("OK");
+        }
+
+        public static string GetEnvironmentVariable(string name)
+        {
+            return name + ": " +
+                System.Environment.GetEnvironmentVariable(name, EnvironmentVariableTarget.Process);
         }
     }
 }
