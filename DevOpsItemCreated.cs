@@ -27,7 +27,7 @@ namespace lms
             Jira jira = new Jira();
 
             JiraFields jiraFields = new JiraFields();
-            jiraFields.summary = root.resource.fields.SystemTitle;
+            jiraFields.summary = "LMS Bug " + root.id.ToString(); // root.resource.fields.SystemTitle;
             jiraFields.description = root.detailedMessage.text;
             jiraFields.issuetype = new Issuetype() { name = "Bug" };
             jiraFields.project = new JiraProject() { key = "CPG" };
