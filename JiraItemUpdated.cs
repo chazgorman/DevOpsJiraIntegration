@@ -87,13 +87,13 @@ namespace lms
             ILogger log)
         {
             try
-            {
-                HttpClient client = new HttpClient();
-
+            {               
                 string requestBody = new StreamReader(req.Body).ReadToEndAsync().Result;
                 //dynamic data = JsonConvert.ToString(requestBody);
 
                 _logger.LogInformation("JiraItemUpdated Request Body: " + requestBody);
+
+                HttpClient client = new HttpClient();
 
                 HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, "https://webhook.site/380de732-9847-4c25-a68c-109d2b3cf33f");
                 request.Headers.Add("Accept", "application/json");
