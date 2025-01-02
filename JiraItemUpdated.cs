@@ -88,15 +88,26 @@ namespace lms
         {
             try
             {
+                HttpClient client = new HttpClient();
+
                 string requestBody = new StreamReader(req.Body).ReadToEndAsync().Result;
                 dynamic data = JsonConvert.ToString(requestBody);
 
                 _logger.LogInformation("JiraItemUpdated Request Body: " + requestBody);
-            }
-            catch (Exception)
-            {
 
-                throw;
+                HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, "https://webhook.site/380de732-9847-4c25-a68c-109d2b3cf33f");
+                request.Headers.Add("Accept", "application/json");
+                request.Content = new StringContent(data);
+                request.Content.Headers.ContentType = new MediaTypeHeaderValue("application/json");
+
+                HttpResponseMessage response = client.Send(request);
+
+                _logger.LogInformation("Jira request response code: " + response.StatusCode);
+
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError("Exception in JiraItemUpdated: " + ex.Message);
             }
             return new OkObjectResult("OK");
         }
