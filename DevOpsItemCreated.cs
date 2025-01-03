@@ -1,4 +1,5 @@
 using Azure.Core;
+using Html2Markdown;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.Functions.Worker;
@@ -31,7 +32,7 @@ namespace lms
 
             string[] devOpsIssueTitle = root.message.text.Split("created");
             JiraFields jiraFields = new JiraFields();
-            jiraFields.summary = "[DevOps" + root.resource.fields.SystemWorkItemType + ":" + root.resource.id.ToString() + "]: " + root.resource.fields.SystemTitle;
+            jiraFields.summary = "[DevOps " + root.resource.fields.SystemWorkItemType + ":" + root.resource.id.ToString() + "]: " + root.resource.fields.SystemTitle;
             jiraFields.description = root.detailedMessage.text;
 
             if(root.resource.fields.SystemWorkItemType == "Bug")
@@ -47,7 +48,12 @@ namespace lms
 
             if(root.resource.fields.MicrosoftVSTSTCMReproSteps is not null)
             {
-                jiraFields.description += "Repro Steps: \r\n" + root.resource.fields.MicrosoftVSTSTCMReproSteps;
+                var html = root.resource.fields.MicrosoftVSTSTCMReproSteps;
+                var converter = new Converter();
+                var markdown = converter.Convert(html);
+
+                jiraFields.description += "\r\nRepro Steps: \r\n" + markdown;
+                jiraFields.description = jiraFields.description.Replace("<div>", "").Replace("</div>", "");
             }
             jira.fields = jiraFields;
 
@@ -138,14 +144,12 @@ namespace lms
                 }
                 else
                 {
-                    _logger.LogInformation("DevOpsItemCreated: rootDevOpsItem is NULL");
+                    _logger.LogError("DevOpsItemCreated: rootDevOpsItem is NULL");
                 }
-
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-
-                throw;
+                _logger.LogError("Exception in DevOpsItemCreated: " + ex.Message);
             }
             return new OkObjectResult("OK");
         }
