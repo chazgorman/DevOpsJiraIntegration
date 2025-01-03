@@ -53,6 +53,8 @@ namespace lms
 
             string data = JsonConvert.SerializeObject(jira);
 
+            _logger.LogInformation("Jira request payload: " + data);
+
             //string data = @"{
             //    ""fields"": {
             //        ""project"": {
