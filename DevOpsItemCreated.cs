@@ -24,15 +24,31 @@ namespace lms
 
         public void SendJiraRequest(DevOps root)
         {
+            string projectKey = GetEnvironmentVariable("JiraProjectKey").Split(':')[1].Trim();
+            _logger.LogInformation("Jira Project Key: " + projectKey);
+
             Jira jira = new Jira();
 
             string[] devOpsIssueTitle = root.message.text.Split("created");
             JiraFields jiraFields = new JiraFields();
-            jiraFields.summary = "[DevOps" + ":" + root.resource.id.ToString() + "]: " + devOpsIssueTitle[0];
+            jiraFields.summary = "[DevOps" + root.resource.fields.SystemWorkItemType + ":" + root.resource.id.ToString() + "]: " + root.resource.fields.SystemTitle;
             jiraFields.description = root.detailedMessage.text;
-            jiraFields.issuetype = new Issuetype() { name = "Bug" };
-            jiraFields.project = new JiraProject() { key = "CPG" };
 
+            if(root.resource.fields.SystemWorkItemType == "Bug")
+            {
+                jiraFields.issuetype = new Issuetype() { name = "Bug" };
+            }
+            else
+            {
+                jiraFields.issuetype = new Issuetype() { name = "Issue" };
+            }
+            
+            jiraFields.project = new JiraProject() { key = projectKey };
+
+            if(root.resource.fields.MicrosoftVSTSTCMReproSteps is not null)
+            {
+                jiraFields.description += "Repro Steps: \r\n" + root.resource.fields.MicrosoftVSTSTCMReproSteps;
+            }
             jira.fields = jiraFields;
 
             string data = JsonConvert.SerializeObject(jira);
