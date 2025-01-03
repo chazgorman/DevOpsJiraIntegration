@@ -4,15 +4,24 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
+using System;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Net.Mime;
 using System.Text;
+using System.Text.Json.Serialization;
 using VSCodeFunction;
 
 namespace lms
 {
+    public class DevOpsComment
+    {
+        [JsonProperty("text")]
+        [JsonPropertyName("text")]
+        public string text;
+    }
+
     public class JiraItemUpdated
     {
         private readonly ILogger<JiraItemUpdated> _logger;
@@ -22,56 +31,53 @@ namespace lms
             _logger = logger;
         }
 
-        public void SendJiraRequest(DevOps root)
+        public void SendDevOpsRequest(JiraIssueComment root)
         {
-            Jira jira = new Jira();
-
-            JiraFields jiraFields = new JiraFields();
-            jiraFields.summary = "LMS Bug " + root.id.ToString(); // root.resource.fields.SystemTitle;
-            jiraFields.description = root.detailedMessage.text;
-            jiraFields.issuetype = new Issuetype() { name = "Bug" };
-            jiraFields.project = new JiraProject() { key = "CPG" };
-
-            jira.fields = jiraFields;
-
-            string data = JsonConvert.SerializeObject(jira);
-
-            //string data = @"{
-            //    ""fields"": {
-            //        ""project"": {
-            //            ""key"": ""CPG""
-            //        },
-            //        ""summary"": ""Sample Bug"",
-            //        ""description"": ""Creating a bug via REST API"",
-            //        ""issuetype"": {
-            //            ""name"": ""Bug""
-            //        }
-            //    }
-            //}";
-
-            HttpClient client = new HttpClient();
-
-            string token = GetEnvironmentVariable("JiraToken").Split(':')[1].Trim();
-            _logger.LogInformation("Jira Token: " + token);
-
-            //Putting the credentials as bytes.
-            byte[] cred = UTF8Encoding.UTF8.GetBytes("chaz.gorman@gmail.com:" + token);
-
-            HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, "https://chazgorman.atlassian.net/rest/api/latest/issue");
-
-            request.Headers.Add("Accept", "application/json");
-
-            //Putting credentials in Authorization headers.
-            client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Basic", Convert.ToBase64String(cred));
-
-            request.Content = new StringContent(data);
-            request.Content.Headers.ContentType = new MediaTypeHeaderValue("application/json");
+            DevOpsComment comment = new DevOpsComment() { text = root.comment.body };
+            string commentJson = JsonConvert.SerializeObject(comment);
 
             try
             {
+                string user = GetEnvironmentVariable("DevOpsUser").Split(':')[1].Trim();
+                _logger.LogInformation("DevOps User: " + user);
+
+                string token = GetEnvironmentVariable("DevOpsToken").Split(':')[1].Trim();
+                _logger.LogInformation("DevOps Token: " + token);
+
+                string url = GetEnvironmentVariable("DevOpsRootUrl").Split(':')[1].Trim();
+                _logger.LogInformation("DevOps Url: " + url);
+
+                string project = GetEnvironmentVariable("DevOpsProject").Split(':')[1].Trim();
+                _logger.LogInformation("DevOps Project: " + project);
+
+                string commentId = "41";
+
+                UriBuilder builder = new UriBuilder(url);
+                builder.Scheme = "https";
+                builder.Host = url;
+                builder.Path = project + "/_apis/wit/workItems/" + commentId + "/comments";
+                builder.Query = "api-version=7.0-preview.3";
+                builder.Port = -1;
+
+                string requestUrl = builder.Uri.AbsoluteUri;
+
+                //Putting the credentials as bytes.
+                byte[] cred = UTF8Encoding.UTF8.GetBytes(user + ":" + token);
+
+
+                HttpClient client = new HttpClient();
+                client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Basic", Convert.ToBase64String(cred));
+
+                // DevOps create comment: https://dev.azure.com/CharlieGorman/Issue%20Tracking/_apis/wit/workItems/{workItemId}/comments?api-version=7.0-preview.3
+                //string requestUrl = "https://dev.azure.com/CharlieGorman/Issue%20Tracking/_apis/wit/workItems/41/comments";
+
+
+                HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, requestUrl);
+                request.Headers.Add("Accept", "application/json");
+                request.Content = new StringContent(commentJson);
+                request.Content.Headers.ContentType = new MediaTypeHeaderValue("application/json");
+
                 HttpResponseMessage response = client.Send(request);
-                //response.EnsureSuccessStatusCode();
-                //string responseBody = response.Content.ReadAsStringAsync();
 
                 _logger.LogInformation("Jira request response code: " + response.StatusCode);
             }
@@ -87,22 +93,26 @@ namespace lms
             ILogger log)
         {
             try
-            {               
+            {
                 string requestBody = new StreamReader(req.Body).ReadToEndAsync().Result;
-                //dynamic data = JsonConvert.ToString(requestBody);
+                dynamic data = JsonConvert.ToString(requestBody);
 
                 _logger.LogInformation("JiraItemUpdated Request Body: " + requestBody);
 
-                HttpClient client = new HttpClient();
+                JiraIssueComment? rootJiraIssueComment = JsonConvert.DeserializeObject<JiraIssueComment>(requestBody);
 
-                HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, "https://webhook.site/380de732-9847-4c25-a68c-109d2b3cf33f");
-                request.Headers.Add("Accept", "application/json");
-                request.Content = new StringContent(requestBody);
-                request.Content.Headers.ContentType = new MediaTypeHeaderValue("application/json");
+                if (rootJiraIssueComment != null)
+                {
+                    _logger.LogInformation("Received DevOpsItem " + rootJiraIssueComment?.issue.id);
+                    string messageContent = $"{data}";
 
-                HttpResponseMessage response = client.Send(request);
-
-                _logger.LogInformation("Jira request response code: " + response.StatusCode);
+                    _logger.LogInformation("Sending create Jira item request");
+                    SendDevOpsRequest(rootJiraIssueComment);
+                }
+                else
+                {
+                    _logger.LogInformation("DevOpsItemCreated: rootDevOpsItem is NULL");
+                }
 
             }
             catch (Exception ex)

@@ -51,13 +51,27 @@ namespace lms
 
             HttpClient client = new HttpClient();
 
+            string user = GetEnvironmentVariable("JiraUser").Split(':')[1].Trim();
+            _logger.LogInformation("Jira User: " + user);
+
             string token = GetEnvironmentVariable("JiraToken").Split(':')[1].Trim();
             _logger.LogInformation("Jira Token: " + token);
 
-            //Putting the credentials as bytes.
-            byte[] cred = UTF8Encoding.UTF8.GetBytes("chaz.gorman@gmail.com:" + token);
+            string url = GetEnvironmentVariable("JiraRootUrl").Split(':')[1].Trim();
+            _logger.LogInformation("Jira Url: " + url);
 
-            HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, "https://chazgorman.atlassian.net/rest/api/latest/issue");
+            UriBuilder builder = new UriBuilder(url);
+            builder.Scheme = "https";
+            builder.Host = url;
+            builder.Path = "rest/api/latest/issue";
+            builder.Port = -1;
+
+            string requestUrl = builder.Uri.AbsoluteUri;
+
+            //Putting the credentials as bytes.
+            byte[] cred = UTF8Encoding.UTF8.GetBytes(user + ":" + token);
+
+            HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, requestUrl);
 
             request.Headers.Add("Accept", "application/json");
 
@@ -86,29 +100,6 @@ namespace lms
             [HttpTrigger(AuthorizationLevel.Function, "get", "post", Route = null)] HttpRequest req,
             ILogger log)
         {
-            //HttpClient client = new HttpClient();
-
-            //var request = new HttpRequestMessage
-            //{
-            //    Method = HttpMethod.Post,
-            //    RequestUri = new Uri("https://webhook.site/62403fa8-fc74-4249-8520-7f40b646fb3c"),
-            //    Content = new StringContent(
-            //    messageContent,
-            //    Encoding.UTF8,
-            //    MediaTypeNames.Application.Json), // or "application/json" in older versions
-            //};
-
-            //request.Headers.Add("Accept", "application/json");
-
-            //var response = await client.SendAsync(request)
-            //    .ConfigureAwait(false);
-            //response.EnsureSuccessStatusCode();
-
-            //var responseBody = await response.Content.ReadAsStringAsync()
-            //    .ConfigureAwait(false);
-
-            //var responseString = await response.Content.ReadAsStringAsync();
-
             try
             {
                 string requestBody = new StreamReader(req.Body).ReadToEndAsync().Result;
