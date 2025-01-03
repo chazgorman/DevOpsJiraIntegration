@@ -24,7 +24,7 @@ namespace lms
             _logger = logger;
         }
 
-        public JiraItemCreatedResponse? SendJiraRequest(DevOps root)
+        public JiraItemCreatedResponse? SendJiraCommentRequest(DevOps root)
         {
             string projectKey = GetEnvironmentVariable("JiraProjectKey").Split(':')[1].Trim();
             _logger.LogInformation("Jira Project Key: " + projectKey);
@@ -210,8 +210,8 @@ namespace lms
                     _logger.LogInformation("Received DevOpsItem " + rootDevOpsItem?.id);
                     string messageContent = $"{data}";
 
-                    _logger.LogInformation("Sending create Jira item request");
-                    var jiraResponse = SendJiraRequest(rootDevOpsItem);
+                    _logger.LogInformation("Sending create Jira comment request");
+                    var jiraResponse = SendJiraCommentRequest(rootDevOpsItem);
                     if (jiraResponse != null && rootDevOpsItem != null && rootDevOpsItem.resource != null && rootDevOpsItem.resource.id != null)
                     {
                         TagDevOpsIssueWithJiraNumber(rootDevOpsItem.resource.id.ToString(), jiraResponse.id);
