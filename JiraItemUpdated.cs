@@ -22,6 +22,22 @@ namespace lms
         public string text;
     }
 
+    public class JiraItemCreatedResponse
+    {
+        [JsonProperty("id")]
+        [JsonPropertyName("id")]
+        public string id;
+
+        [JsonProperty("key")]
+        [JsonPropertyName("key")]
+        public string key;
+
+        [JsonProperty("self")]
+        [JsonPropertyName("self")]
+        public string self;
+    }
+
+
     public class JiraItemUpdated
     {
         private readonly ILogger<JiraItemUpdated> _logger;

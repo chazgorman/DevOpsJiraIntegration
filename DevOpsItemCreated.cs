@@ -10,10 +10,26 @@ using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Net.Mime;
 using System.Text;
+using System.Text.Json.Serialization;
 using VSCodeFunction;
 
 namespace lms
 {
+    public class DevOpsTag
+    {
+        [JsonProperty("op")]
+        [JsonPropertyName("op")]
+        public string op;
+
+        [JsonProperty("path")]
+        [JsonPropertyName("path")]
+        public string path;
+
+        [JsonProperty("value")]
+        [JsonPropertyName("value")]
+        public string value;
+    }
+
     public class DevOpsItemCreated
     {
         private readonly ILogger<DevOpsItemCreated> _logger;
@@ -23,7 +39,7 @@ namespace lms
             _logger = logger;
         }
 
-        public void SendJiraRequest(DevOps root)
+        public JiraItemCreatedResponse? SendJiraRequest(DevOps root)
         {
             string projectKey = GetEnvironmentVariable("JiraProjectKey").Split(':')[1].Trim();
             _logger.LogInformation("Jira Project Key: " + projectKey);
@@ -109,8 +125,78 @@ namespace lms
             try
             {
                 HttpResponseMessage response = client.Send(request);
-                //response.EnsureSuccessStatusCode();
-                //string responseBody = response.Content.ReadAsStringAsync();
+                response.EnsureSuccessStatusCode();
+                Task<string> responseBody = response.Content.ReadAsStringAsync();
+
+                responseBody.Wait();
+
+                _logger.LogInformation("Jira request response code: " + response.StatusCode);
+
+                string responseString = responseBody.Result;
+                
+                if(responseString != null)
+                {
+                    JiraItemCreatedResponse? jiraItemCreatedResponse = JsonConvert.DeserializeObject<JiraItemCreatedResponse>(responseString);
+                    return jiraItemCreatedResponse;
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogInformation("Exception sending Jira request: " + ex.Message);
+            }
+
+            return null;
+        }
+
+        public void TagDevOpsIssueWithJiraNumber(string devOpsItemId, string JiraIssueNumber)
+        {
+            DevOpsTag tag = new DevOpsTag()
+            {
+                op = "add",
+                path = "/fields/System.Tags",
+                value = "Jira:" + JiraIssueNumber
+            };
+
+            List<DevOpsTag> tags = new List<DevOpsTag> { tag };
+
+            string tagJson = JsonConvert.SerializeObject(tags);
+
+            try
+            {
+                string user = GetEnvironmentVariable("DevOpsUser").Split(':')[1].Trim();
+                _logger.LogInformation("DevOps User: " + user);
+
+                string token = GetEnvironmentVariable("DevOpsToken").Split(':')[1].Trim();
+                _logger.LogInformation("DevOps Token: " + token);
+
+                string url = GetEnvironmentVariable("DevOpsRootUrl").Split(':')[1].Trim();
+                _logger.LogInformation("DevOps Url: " + url);
+
+                string project = GetEnvironmentVariable("DevOpsProject").Split(':')[1].Trim();
+                _logger.LogInformation("DevOps Project: " + project);
+
+                UriBuilder builder = new UriBuilder(url);
+                builder.Scheme = "https";
+                builder.Host = url;
+                builder.Path = project + "/_apis/wit/workItems/" + devOpsItemId;
+                builder.Query = "api-version=7.0-preview.3";
+                builder.Port = -1;
+
+                string requestUrl = builder.Uri.AbsoluteUri;
+
+                //Putting the credentials as bytes.
+                byte[] cred = UTF8Encoding.UTF8.GetBytes(user + ":" + token);
+
+
+                HttpClient client = new HttpClient();
+                client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Basic", Convert.ToBase64String(cred));
+
+                HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Patch, requestUrl);
+                request.Headers.Add("Accept", "application/json");
+                request.Content = new StringContent(tagJson);
+                request.Content.Headers.ContentType = new MediaTypeHeaderValue("application/json-patch+json");
+
+                HttpResponseMessage response = client.Send(request);
 
                 _logger.LogInformation("Jira request response code: " + response.StatusCode);
             }
@@ -140,7 +226,11 @@ namespace lms
                     string messageContent = $"{data}";
 
                     _logger.LogInformation("Sending create Jira item request");
-                    SendJiraRequest(rootDevOpsItem);
+                    var jiraResponse = SendJiraRequest(rootDevOpsItem);
+                    if (jiraResponse != null && rootDevOpsItem != null && rootDevOpsItem.resource != null && rootDevOpsItem.resource.id != null)
+                    {
+                        TagDevOpsIssueWithJiraNumber(rootDevOpsItem.resource.id.ToString(), jiraResponse.id);
+                    }                    
                 }
                 else
                 {
