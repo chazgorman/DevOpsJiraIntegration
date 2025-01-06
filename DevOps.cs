@@ -134,6 +134,14 @@ namespace VSCodeFunction
         [JsonProperty("href")]
         [JsonPropertyName("href")]
         public string href;
+
+        [JsonProperty("Custom.JiraID")]
+        [JsonPropertyName("Custom.JiraID")]
+        public string JiraID;
+
+        [JsonProperty("Custom.JiraKey")]
+        [JsonPropertyName("Custom.JiraKey")]
+        public string JiraKey;
     }
 
     public class Html

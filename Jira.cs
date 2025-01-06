@@ -48,5 +48,10 @@ namespace VSCodeFunction
         public JiraFields fields;
     }
 
-
+    public class JiraComment
+    {
+        [JsonProperty("body")]
+        [JsonPropertyName("body")]
+        public string body;
+    }
 }

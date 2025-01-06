@@ -15,7 +15,7 @@ using VSCodeFunction;
 
 namespace lms
 {
-    public class DevOpsTag
+    public class DevOpsOperation
     {
         [JsonProperty("op")]
         [JsonPropertyName("op")]
@@ -148,16 +148,23 @@ namespace lms
             return null;
         }
 
-        public void TagDevOpsIssueWithJiraNumber(string devOpsItemId, string JiraIssueNumber)
+        public void UpdateDevOpsIssueWithJiraNumberAndKey(string devOpsItemId, string JiraID, string JiraKey)
         {
-            DevOpsTag tag = new DevOpsTag()
+            DevOpsOperation addJiraID = new DevOpsOperation()
             {
                 op = "add",
-                path = "/fields/System.Tags",
-                value = "Jira:" + JiraIssueNumber
+                path = "/fields/Custom.JiraID",
+                value = JiraID
             };
 
-            List<DevOpsTag> tags = new List<DevOpsTag> { tag };
+            DevOpsOperation addJiraKey = new DevOpsOperation()
+            {
+                op = "add",
+                path = "/fields/Custom.JiraKey",
+                value = JiraKey
+            };
+
+            List<DevOpsOperation> tags = new List<DevOpsOperation> { addJiraID, addJiraKey };
 
             string tagJson = JsonConvert.SerializeObject(tags);
 
@@ -229,7 +236,7 @@ namespace lms
                     var jiraResponse = SendJiraRequest(rootDevOpsItem);
                     if (jiraResponse != null && rootDevOpsItem != null && rootDevOpsItem.resource != null && rootDevOpsItem.resource.id != null)
                     {
-                        TagDevOpsIssueWithJiraNumber(rootDevOpsItem.resource.id.ToString(), jiraResponse.id);
+                        UpdateDevOpsIssueWithJiraNumberAndKey(rootDevOpsItem.resource.id.ToString(), jiraResponse.id, jiraResponse.key);
                     }                    
                 }
                 else
