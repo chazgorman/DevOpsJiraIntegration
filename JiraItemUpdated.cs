@@ -52,6 +52,10 @@ namespace lms
             DevOpsComment comment = new DevOpsComment() { text = root.comment.body };
             string commentJson = JsonConvert.SerializeObject(comment);
 
+            string[] summarySplit = root.issue.fields.summary.Split("]");
+            string[] idSplit = summarySplit[0].Split(":");
+            string devOpsID = idSplit[1];
+
             try
             {
                 string user = GetEnvironmentVariable("DevOpsUser").Split(':')[1].Trim();
@@ -66,12 +70,10 @@ namespace lms
                 string project = GetEnvironmentVariable("DevOpsProject").Split(':')[1].Trim();
                 _logger.LogInformation("DevOps Project: " + project);
 
-                string commentId = "41";
-
                 UriBuilder builder = new UriBuilder(url);
                 builder.Scheme = "https";
                 builder.Host = url;
-                builder.Path = project + "/_apis/wit/workItems/" + commentId + "/comments";
+                builder.Path = project + "/_apis/wit/workItems/" + devOpsID + "/comments";
                 builder.Query = "api-version=7.0-preview.3";
                 builder.Port = -1;
 
