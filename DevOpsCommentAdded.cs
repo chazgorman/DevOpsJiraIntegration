@@ -93,13 +93,17 @@ namespace lms
 
                     if (rootDevOpsItem != null && rootDevOpsItem.resource != null && rootDevOpsItem.resource.id != null)
                     {
-                        _logger.LogInformation("Sending DevOps comment to Jira.");
+                        // If the comment was originally from Jira, don't send back to Jira
+                        if(!rootDevOpsItem.detailedMessage.text.StartsWith("Jira Update"))
+                        {
+                            _logger.LogInformation("Sending DevOps comment to Jira.");
 
-                        string JiraIssueNumber = rootDevOpsItem.resource.fields.JiraID;
+                            string JiraIssueNumber = rootDevOpsItem.resource.fields.JiraID;
 
-                        string comment = "DevOps Update:\r\n" + rootDevOpsItem.detailedMessage.text;
+                            string comment = "DevOps Update:\r\n" + rootDevOpsItem.detailedMessage.text;
 
-                        SendDevOpsCommentToJira(JiraIssueNumber, comment);
+                            SendDevOpsCommentToJira(JiraIssueNumber, comment);
+                        }
                     }                    
                 }
                 else
