@@ -97,9 +97,9 @@ namespace lms
 
                         string JiraIssueNumber = rootDevOpsItem.resource.fields.JiraID;
 
-                        string comment = rootDevOpsItem.detailedMessage.text;
+                        string comment = "DevOps Update:\r\n" + rootDevOpsItem.detailedMessage.text;
 
-                        //SendDevOpsCommentToJira(JiraIssueNumber, comment);
+                        SendDevOpsCommentToJira(JiraIssueNumber, comment);
                     }                    
                 }
                 else

@@ -49,6 +49,12 @@ namespace lms
 
         public void SendDevOpsRequest(JiraIssueComment root)
         {
+            // Test if this is a DevOps comment to avoid endless loop of comments.
+            if(root.comment.body.StartsWith("DevOps Update"))
+            {
+                return;
+            }
+
             DevOpsComment comment = new DevOpsComment() { text = root.comment.body };
             string commentJson = JsonConvert.SerializeObject(comment);
 
