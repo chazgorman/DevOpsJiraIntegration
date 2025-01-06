@@ -94,7 +94,7 @@ namespace lms
                     if (rootDevOpsItem != null && rootDevOpsItem.resource != null && rootDevOpsItem.resource.id != null)
                     {
                         // If the comment was originally from Jira, don't send back to Jira
-                        if(!rootDevOpsItem.detailedMessage.text.StartsWith("Jira Update"))
+                        if(!rootDevOpsItem.detailedMessage.text.Contains("Jira Update"))
                         {
                             _logger.LogInformation("Sending DevOps comment to Jira.");
 
