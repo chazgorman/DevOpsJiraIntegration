@@ -99,7 +99,7 @@ namespace lms
 
                         string comment = rootDevOpsItem.detailedMessage.text;
 
-                        SendDevOpsCommentToJira(JiraIssueNumber, comment);
+                        //SendDevOpsCommentToJira(JiraIssueNumber, comment);
                     }                    
                 }
                 else
