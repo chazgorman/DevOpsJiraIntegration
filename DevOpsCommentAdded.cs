@@ -96,7 +96,8 @@ namespace lms
                         _logger.LogInformation("Sending DevOps comment to Jira.");
 
                         string JiraIssueNumber = rootDevOpsItem.resource.fields.JiraID;
-                        string comment = "Comment for Jira Issue " + JiraIssueNumber + " " + DateTime.Now.ToString();
+
+                        string comment = rootDevOpsItem.detailedMessage.text;
 
                         SendDevOpsCommentToJira(JiraIssueNumber, comment);
                     }                    

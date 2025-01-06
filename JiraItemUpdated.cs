@@ -86,10 +86,6 @@ namespace lms
                 HttpClient client = new HttpClient();
                 client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Basic", Convert.ToBase64String(cred));
 
-                // DevOps create comment: https://dev.azure.com/CharlieGorman/Issue%20Tracking/_apis/wit/workItems/{workItemId}/comments?api-version=7.0-preview.3
-                //string requestUrl = "https://dev.azure.com/CharlieGorman/Issue%20Tracking/_apis/wit/workItems/41/comments";
-
-
                 HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, requestUrl);
                 request.Headers.Add("Accept", "application/json");
                 request.Content = new StringContent(commentJson);
