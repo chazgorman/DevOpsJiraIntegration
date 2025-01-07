@@ -41,7 +41,7 @@ namespace lms
 
         public JiraItemCreatedResponse? SendJiraRequest(DevOps root)
         {
-            string ?projectKey = Utils.GetEnvironmentVariable("JiraProjectKey").Split(':')[1].Trim();
+            string ?projectKey = Utils.GetEnvironmentVariable("JiraProjectKey");
             
             _logger.LogInformation("Jira Project Key: " + projectKey);
 
@@ -177,16 +177,16 @@ namespace lms
 
             try
             {
-                string user = Utils.GetEnvironmentVariable("DevOpsUser");
+                string? user = Utils.GetEnvironmentVariable("DevOpsUser");
                 _logger.LogInformation("DevOps User: " + user);
 
-                string token = Utils.GetEnvironmentVariable("DevOpsToken");
+                string? token = Utils.GetEnvironmentVariable("DevOpsToken");
                 _logger.LogInformation("DevOps Token: " + token);
 
-                string url = Utils.GetEnvironmentVariable("DevOpsRootUrl");
+                string? url = Utils.GetEnvironmentVariable("DevOpsRootUrl");
                 _logger.LogInformation("DevOps Url: " + url);
 
-                string project = Utils.GetEnvironmentVariable("DevOpsProject");
+                string? project = Utils.GetEnvironmentVariable("DevOpsProject");
                 _logger.LogInformation("DevOps Project: " + project);
 
                 UriBuilder builder = new UriBuilder(url);
