@@ -64,17 +64,18 @@ namespace lms
 
             try
             {
-                string user = GetEnvironmentVariable("DevOpsUser").Split(':')[1].Trim();
+                string? user = Utils.GetEnvironmentVariable("DevOpsUser");
                 _logger.LogInformation("DevOps User: " + user);
 
-                string token = GetEnvironmentVariable("DevOpsToken").Split(':')[1].Trim();
+                string? token = Utils.GetEnvironmentVariable("DevOpsToken");
                 _logger.LogInformation("DevOps Token: " + token);
 
-                string url = GetEnvironmentVariable("DevOpsRootUrl").Split(':')[1].Trim();
+                string? url = Utils.GetEnvironmentVariable("DevOpsRootUrl");
                 _logger.LogInformation("DevOps Url: " + url);
 
-                string project = GetEnvironmentVariable("DevOpsProject").Split(':')[1].Trim();
+                string? project = Utils.GetEnvironmentVariable("DevOpsProject");
                 _logger.LogInformation("DevOps Project: " + project);
+
 
                 UriBuilder builder = new UriBuilder(url);
                 builder.Scheme = "https";
@@ -140,12 +141,6 @@ namespace lms
                 _logger.LogError("Exception in JiraItemUpdated: " + ex.Message);
             }
             return new OkObjectResult("OK");
-        }
-
-        public static string GetEnvironmentVariable(string name)
-        {
-            return name + ": " +
-                System.Environment.GetEnvironmentVariable(name, EnvironmentVariableTarget.Process);
         }
     }
 }

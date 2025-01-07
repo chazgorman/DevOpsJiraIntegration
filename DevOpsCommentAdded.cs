@@ -35,14 +35,20 @@ namespace lms
             {
                 HttpClient client = new HttpClient();
 
-                string user = GetEnvironmentVariable("JiraUser").Split(':')[1].Trim();
+                string? user = Utils.GetEnvironmentVariable("JiraUser");
                 _logger.LogInformation("Jira User: " + user);
 
-                string token = GetEnvironmentVariable("JiraToken").Split(':')[1].Trim();
+                string? token = Utils.GetEnvironmentVariable("JiraToken");
                 _logger.LogInformation("Jira Token: " + token);
 
-                string url = GetEnvironmentVariable("JiraRootUrl").Split(':')[1].Trim();
+                string? url = Utils.GetEnvironmentVariable("JiraRootUrl");
                 _logger.LogInformation("Jira Url: " + url);
+
+                if(url is null)
+                {
+                    _logger.LogError("Jira URL environment variable is null");
+                    return;
+                }
 
                 UriBuilder builder = new UriBuilder(url);
                 builder.Scheme = "https";
@@ -55,7 +61,7 @@ namespace lms
                 //Putting the credentials as bytes.
                 byte[] cred = UTF8Encoding.UTF8.GetBytes(user + ":" + token);
 
-                client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Basic", Convert.ToBase64String(cred));
+                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Basic", Convert.ToBase64String(cred));
 
                 HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, requestUrl);
                 request.Headers.Add("Accept", "application/json");
@@ -116,12 +122,6 @@ namespace lms
                 _logger.LogError("Exception in DevOpsCommentAdded: " + ex.Message);
             }
             return new OkObjectResult("OK");
-        }
-
-        public static string GetEnvironmentVariable(string name)
-        {
-            return name + ": " +
-                System.Environment.GetEnvironmentVariable(name, EnvironmentVariableTarget.Process);
         }
     }
 }

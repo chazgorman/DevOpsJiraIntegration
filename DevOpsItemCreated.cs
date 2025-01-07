@@ -41,7 +41,8 @@ namespace lms
 
         public JiraItemCreatedResponse? SendJiraRequest(DevOps root)
         {
-            string projectKey = GetEnvironmentVariable("JiraProjectKey").Split(':')[1].Trim();
+            string ?projectKey = Utils.GetEnvironmentVariable("JiraProjectKey").Split(':')[1].Trim();
+            
             _logger.LogInformation("Jira Project Key: " + projectKey);
 
             Jira jira = new Jira();
@@ -92,14 +93,20 @@ namespace lms
 
             HttpClient client = new HttpClient();
 
-            string user = GetEnvironmentVariable("JiraUser").Split(':')[1].Trim();
+            string? user = Utils.GetEnvironmentVariable("JiraUser");
             _logger.LogInformation("Jira User: " + user);
 
-            string token = GetEnvironmentVariable("JiraToken").Split(':')[1].Trim();
+            string? token = Utils.GetEnvironmentVariable("JiraToken");
             _logger.LogInformation("Jira Token: " + token);
 
-            string url = GetEnvironmentVariable("JiraRootUrl").Split(':')[1].Trim();
+            string? url = Utils.GetEnvironmentVariable("JiraRootUrl");
             _logger.LogInformation("Jira Url: " + url);
+
+            if(url is null)
+            {
+                _logger.LogError("Jira URL environment variable is null");
+                return null;
+            }
 
             UriBuilder builder = new UriBuilder(url);
             builder.Scheme = "https";
@@ -117,7 +124,7 @@ namespace lms
             request.Headers.Add("Accept", "application/json");
 
             //Putting credentials in Authorization headers.
-            client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Basic", Convert.ToBase64String(cred));
+            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Basic", Convert.ToBase64String(cred));
 
             request.Content = new StringContent(data);
             request.Content.Headers.ContentType = new MediaTypeHeaderValue("application/json");
@@ -170,16 +177,16 @@ namespace lms
 
             try
             {
-                string user = GetEnvironmentVariable("DevOpsUser").Split(':')[1].Trim();
+                string user = Utils.GetEnvironmentVariable("DevOpsUser");
                 _logger.LogInformation("DevOps User: " + user);
 
-                string token = GetEnvironmentVariable("DevOpsToken").Split(':')[1].Trim();
+                string token = Utils.GetEnvironmentVariable("DevOpsToken");
                 _logger.LogInformation("DevOps Token: " + token);
 
-                string url = GetEnvironmentVariable("DevOpsRootUrl").Split(':')[1].Trim();
+                string url = Utils.GetEnvironmentVariable("DevOpsRootUrl");
                 _logger.LogInformation("DevOps Url: " + url);
 
-                string project = GetEnvironmentVariable("DevOpsProject").Split(':')[1].Trim();
+                string project = Utils.GetEnvironmentVariable("DevOpsProject");
                 _logger.LogInformation("DevOps Project: " + project);
 
                 UriBuilder builder = new UriBuilder(url);
@@ -249,12 +256,6 @@ namespace lms
                 _logger.LogError("Exception in DevOpsItemCreated: " + ex.Message);
             }
             return new OkObjectResult("OK");
-        }
-
-        public static string GetEnvironmentVariable(string name)
-        {
-            return name + ": " +
-                System.Environment.GetEnvironmentVariable(name, EnvironmentVariableTarget.Process);
         }
     }
 }
