@@ -21,9 +21,13 @@ namespace lms
     {
         private readonly ILogger<DevOpsCommentAdded> _logger;
 
+        private DevOpsImageUtils _imageUtils;
+
         public DevOpsCommentAdded(ILogger<DevOpsCommentAdded> logger)
         {
             _logger = logger;
+
+            _imageUtils = new DevOpsImageUtils(_logger);
         }
 
         public void SendDevOpsCommentToJira(string JiraIssueNumber, string comment)
@@ -80,170 +84,170 @@ namespace lms
             }
         }
 
-        private Dictionary<string, string> FindIssueAttachments(string systemHistoryString)
-        {
-            Dictionary<string,string> imageAttachments = new Dictionary<string, string>();
+        //private Dictionary<string, string> FindIssueAttachments(string systemHistoryString)
+        //{
+        //    Dictionary<string,string> imageAttachments = new Dictionary<string, string>();
 
-            var html = systemHistoryString;
-            var doc = new HtmlDocument();
-            doc.LoadHtml(html);
+        //    var html = systemHistoryString;
+        //    var doc = new HtmlDocument();
+        //    doc.LoadHtml(html);
 
-            // Select all img tags
-            var imgTags = doc.DocumentNode.SelectNodes("//img");
+        //    // Select all img tags
+        //    var imgTags = doc.DocumentNode.SelectNodes("//img");
 
-            if (imgTags != null)
-            {
-                int imgIndex = 0;
+        //    if (imgTags != null)
+        //    {
+        //        int imgIndex = 0;
 
-                foreach (var img in imgTags)
-                {                    
-                    imgIndex++;
+        //        foreach (var img in imgTags)
+        //        {                    
+        //            imgIndex++;
 
-                    string imgSrc = img.GetAttributeValue("src", "");
+        //            string imgSrc = img.GetAttributeValue("src", "");
 
-                    Uri imgUri = new Uri(imgSrc);
-                    var queryDictionary = System.Web.HttpUtility.ParseQueryString(imgUri.Query);
-                    string? fileName = queryDictionary.Get("filename");
+        //            Uri imgUri = new Uri(imgSrc);
+        //            var queryDictionary = System.Web.HttpUtility.ParseQueryString(imgUri.Query);
+        //            string? fileName = queryDictionary.Get("filename");
 
-                    if(fileName is null)
-                    {
-                        fileName = "filename" + imgIndex;
-                    }
-                    else
-                    {
-                        FileInfo fileInfo = new FileInfo(fileName);
-                        string fileExt = fileInfo.Extension;
-                    }
+        //            if(fileName is null)
+        //            {
+        //                fileName = "filename" + imgIndex;
+        //            }
+        //            else
+        //            {
+        //                FileInfo fileInfo = new FileInfo(fileName);
+        //                string fileExt = fileInfo.Extension;
+        //            }
 
-                    string attachmentId = imgSrc.Substring(imgSrc.IndexOf("attachments/") + 12, 36);
+        //            string attachmentId = imgSrc.Substring(imgSrc.IndexOf("attachments/") + 12, 36);
 
-                    imageAttachments.Add(fileName, attachmentId);
-                }
-            }
+        //            imageAttachments.Add(fileName, attachmentId);
+        //        }
+        //    }
 
-            return imageAttachments;
-        }
+        //    return imageAttachments;
+        //}
 
-        private async Task DownloadDevOpsAttachment(string issueKey, string DevOpsItemId, string attachmentId)
-        {
-            try
-            {
-                string? user = Utils.GetEnvironmentVariable("DevOpsUser");
-                _logger.LogInformation("DevOps User: " + user);
+        //private async Task DownloadDevOpsAttachment(string issueKey, string DevOpsItemId, string attachmentId)
+        //{
+        //    try
+        //    {
+        //        string? user = Utils.GetEnvironmentVariable("DevOpsUser");
+        //        _logger.LogInformation("DevOps User: " + user);
 
-                string? token = Utils.GetEnvironmentVariable("DevOpsToken");
-                _logger.LogInformation("DevOps Token: " + token);
+        //        string? token = Utils.GetEnvironmentVariable("DevOpsToken");
+        //        _logger.LogInformation("DevOps Token: " + token);
 
-                string? url = Utils.GetEnvironmentVariable("DevOpsRootUrl");
-                _logger.LogInformation("DevOps Url: " + url);
+        //        string? url = Utils.GetEnvironmentVariable("DevOpsRootUrl");
+        //        _logger.LogInformation("DevOps Url: " + url);
 
-                string? project = Utils.GetEnvironmentVariable("DevOpsProject");
-                _logger.LogInformation("DevOps Project: " + project);
-
-
-                UriBuilder builder = new UriBuilder(url);
-                builder.Scheme = "https";
-                builder.Host = url;
-                builder.Path = project + "/_apis/wit/attachments/" + attachmentId;
-                builder.Query = "api-version=7.1";
-                builder.Port = -1;
-
-                string requestUrl = builder.Uri.AbsoluteUri;
-
-                //Putting the credentials as bytes.
-                byte[] cred = UTF8Encoding.UTF8.GetBytes(user + ":" + token);
+        //        string? project = Utils.GetEnvironmentVariable("DevOpsProject");
+        //        _logger.LogInformation("DevOps Project: " + project);
 
 
-                HttpClient client = new HttpClient();
-                client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Basic", Convert.ToBase64String(cred));
-                HttpRequestMessage requestMessage = new HttpRequestMessage(HttpMethod.Get, requestUrl);
+        //        UriBuilder builder = new UriBuilder(url);
+        //        builder.Scheme = "https";
+        //        builder.Host = url;
+        //        builder.Path = project + "/_apis/wit/attachments/" + attachmentId;
+        //        builder.Query = "api-version=7.1";
+        //        builder.Port = -1;
 
-                try
-                {
-                    Task<HttpResponseMessage> httpRequest = client.SendAsync(requestMessage, HttpCompletionOption.ResponseContentRead, CancellationToken.None);
-                    HttpResponseMessage httpResponse = httpRequest.Result;
-                    HttpStatusCode statusCode = httpResponse.StatusCode;
-                    HttpContent responseContent = httpResponse.Content;
+        //        string requestUrl = builder.Uri.AbsoluteUri;
 
-                    if (responseContent != null)
-                    {
-                        Task<byte[]> attachmentContentsTask = responseContent.ReadAsByteArrayAsync();
-                        var fileContents = attachmentContentsTask.Result;
-                        await SendFileToServerAsync(issueKey, DevOpsItemId, fileContents);
-                    }
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine(ex.Message);
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger.LogInformation("Exception sending Jira request: " + ex.Message);
-            }
-        }
+        //        //Putting the credentials as bytes.
+        //        byte[] cred = UTF8Encoding.UTF8.GetBytes(user + ":" + token);
 
-        private async Task SendFileToServerAsync(string IssueKey, string imgFileName, byte[] fileContents)
-        {
-            //FileInfo fi = new FileInfo(@"C:\Users\gormanch\Documents\Projects\LMS\Integrations\Jira\PermitSearchExampleScreenshot.png");
-            //byte[] fileContents = File.ReadAllBytes(fi.FullName);
 
-            HttpClient client = new HttpClient();
+        //        HttpClient client = new HttpClient();
+        //        client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Basic", Convert.ToBase64String(cred));
+        //        HttpRequestMessage requestMessage = new HttpRequestMessage(HttpMethod.Get, requestUrl);
 
-            string? user = Utils.GetEnvironmentVariable("JiraUser");
-            _logger.LogInformation("Jira User: " + user);
+        //        try
+        //        {
+        //            Task<HttpResponseMessage> httpRequest = client.SendAsync(requestMessage, HttpCompletionOption.ResponseContentRead, CancellationToken.None);
+        //            HttpResponseMessage httpResponse = httpRequest.Result;
+        //            HttpStatusCode statusCode = httpResponse.StatusCode;
+        //            HttpContent responseContent = httpResponse.Content;
 
-            string? token = Utils.GetEnvironmentVariable("JiraToken");
-            _logger.LogInformation("Jira Token: " + token);
+        //            if (responseContent != null)
+        //            {
+        //                Task<byte[]> attachmentContentsTask = responseContent.ReadAsByteArrayAsync();
+        //                var fileContents = attachmentContentsTask.Result;
+        //                await SendFileToServerAsync(issueKey, DevOpsItemId, fileContents);
+        //            }
+        //        }
+        //        catch (Exception ex)
+        //        {
+        //            Console.WriteLine(ex.Message);
+        //        }
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        _logger.LogInformation("Exception sending Jira request: " + ex.Message);
+        //    }
+        //}
 
-            string? url = Utils.GetEnvironmentVariable("JiraRootUrl");
-            _logger.LogInformation("Jira Url: " + url);
+        //private async Task SendFileToServerAsync(string IssueKey, string imgFileName, byte[] fileContents)
+        //{
+        //    //FileInfo fi = new FileInfo(@"C:\Users\gormanch\Documents\Projects\LMS\Integrations\Jira\PermitSearchExampleScreenshot.png");
+        //    //byte[] fileContents = File.ReadAllBytes(fi.FullName);
 
-            if (url is null)
-            {
-                _logger.LogError("Jira URL environment variable is null");
-                return;
-            }
+        //    HttpClient client = new HttpClient();
 
-            UriBuilder builder = new UriBuilder(url);
-            builder.Scheme = "https";
-            builder.Host = url;
-            builder.Path = "rest/api/latest/issue/" + IssueKey + "/attachments";
-            builder.Port = -1;
+        //    string? user = Utils.GetEnvironmentVariable("JiraUser");
+        //    _logger.LogInformation("Jira User: " + user);
 
-            string requestUrl = builder.Uri.AbsoluteUri;
+        //    string? token = Utils.GetEnvironmentVariable("JiraToken");
+        //    _logger.LogInformation("Jira Token: " + token);
 
-            HttpRequestMessage requestMessage = new HttpRequestMessage(HttpMethod.Post, requestUrl);
-            requestMessage.Headers.ExpectContinue = false;
+        //    string? url = Utils.GetEnvironmentVariable("JiraRootUrl");
+        //    _logger.LogInformation("Jira Url: " + url);
 
-            MultipartFormDataContent content = new MultipartFormDataContent();
-            content.Add(new ByteArrayContent(fileContents), "file", imgFileName);
-            requestMessage.Content = content;
+        //    if (url is null)
+        //    {
+        //        _logger.LogError("Jira URL environment variable is null");
+        //        return;
+        //    }
 
-            //Putting the credentials as bytes.
-            byte[] cred = UTF8Encoding.UTF8.GetBytes(user + ":" + token);
+        //    UriBuilder builder = new UriBuilder(url);
+        //    builder.Scheme = "https";
+        //    builder.Host = url;
+        //    builder.Path = "rest/api/latest/issue/" + IssueKey + "/attachments";
+        //    builder.Port = -1;
 
-            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Basic", Convert.ToBase64String(cred));
+        //    string requestUrl = builder.Uri.AbsoluteUri;
 
-            client.DefaultRequestHeaders.Add("X-Atlassian-Token", "no-check");
-            try
-            {
-                Task<HttpResponseMessage> httpRequest = client.SendAsync(requestMessage, HttpCompletionOption.ResponseContentRead, CancellationToken.None);
-                HttpResponseMessage httpResponse = httpRequest.Result;
-                HttpStatusCode statusCode = httpResponse.StatusCode;
-                HttpContent responseContent = httpResponse.Content;
+        //    HttpRequestMessage requestMessage = new HttpRequestMessage(HttpMethod.Post, requestUrl);
+        //    requestMessage.Headers.ExpectContinue = false;
 
-                if (responseContent != null)
-                {
-                    Task<String> stringContentsTask = responseContent.ReadAsStringAsync();
-                    string contents = stringContentsTask.Result;
-                }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine(ex.Message);
-            }
-        }
+        //    MultipartFormDataContent content = new MultipartFormDataContent();
+        //    content.Add(new ByteArrayContent(fileContents), "file", imgFileName);
+        //    requestMessage.Content = content;
+
+        //    //Putting the credentials as bytes.
+        //    byte[] cred = UTF8Encoding.UTF8.GetBytes(user + ":" + token);
+
+        //    client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Basic", Convert.ToBase64String(cred));
+
+        //    client.DefaultRequestHeaders.Add("X-Atlassian-Token", "no-check");
+        //    try
+        //    {
+        //        Task<HttpResponseMessage> httpRequest = client.SendAsync(requestMessage, HttpCompletionOption.ResponseContentRead, CancellationToken.None);
+        //        HttpResponseMessage httpResponse = httpRequest.Result;
+        //        HttpStatusCode statusCode = httpResponse.StatusCode;
+        //        HttpContent responseContent = httpResponse.Content;
+
+        //        if (responseContent != null)
+        //        {
+        //            Task<String> stringContentsTask = responseContent.ReadAsStringAsync();
+        //            string contents = stringContentsTask.Result;
+        //        }
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        Console.WriteLine(ex.Message);
+        //    }
+        //}
 
         [Function("DevOpsCommentAdded")]
         public async Task<IActionResult> Run(
@@ -282,7 +286,7 @@ namespace lms
                         {
                             _logger.LogInformation("Sending DevOps image attachments to Jira.");
 
-                            var imgAttachmentIds = FindIssueAttachments(rootDevOpsItem.resource.fields.SystemHistory);
+                            var imgAttachmentIds = _imageUtils.FindIssueAttachments(rootDevOpsItem.resource.fields.SystemHistory);
                             string JiraIssueNumber = rootDevOpsItem.resource.fields.JiraID;
                             int imgIndex = 1;
 
@@ -290,7 +294,7 @@ namespace lms
                             {
                                 FileInfo fileInfo = new FileInfo(imgAttachment.Key);
                                 string imgFileName = "DevOps_" + rootDevOpsItem.resource.id + "_attachment_" + imgIndex++ + fileInfo.Extension;
-                                await DownloadDevOpsAttachment(JiraIssueNumber, imgFileName, imgAttachment.Value);
+                                await _imageUtils.DownloadDevOpsAttachment(JiraIssueNumber, imgFileName, imgAttachment.Value);
                             }                            
                         }
                     }                    

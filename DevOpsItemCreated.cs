@@ -34,9 +34,13 @@ namespace lms
     {
         private readonly ILogger<DevOpsItemCreated> _logger;
 
+        private DevOpsImageUtils _imageUtils;
+
         public DevOpsItemCreated(ILogger<DevOpsItemCreated> logger)
         {
             _logger = logger;
+
+            _imageUtils = new DevOpsImageUtils(_logger);
         }
 
         public JiraItemCreatedResponse? SendJiraRequest(DevOps root)
@@ -244,7 +248,23 @@ namespace lms
                     if (jiraResponse != null && rootDevOpsItem != null && rootDevOpsItem.resource != null && rootDevOpsItem.resource.id != null)
                     {
                         UpdateDevOpsIssueWithJiraNumberAndKey(rootDevOpsItem.resource.id.ToString(), jiraResponse.id, jiraResponse.key);
-                    }                    
+                    }
+
+                    if (rootDevOpsItem.resource.fields.SystemHistory.Contains("<img"))
+                    {
+                        _logger.LogInformation("Sending DevOps image attachments to Jira.");
+
+                        var imgAttachmentIds = _imageUtils.FindIssueAttachments(rootDevOpsItem.resource.fields.SystemHistory);
+                        string JiraIssueNumber = jiraResponse.key;
+                        int imgIndex = 1;
+
+                        foreach (var imgAttachment in imgAttachmentIds)
+                        {
+                            FileInfo fileInfo = new FileInfo(imgAttachment.Key);
+                            string imgFileName = "DevOps_" + rootDevOpsItem.resource.id + "_attachment_" + imgIndex++ + fileInfo.Extension;
+                            await _imageUtils.DownloadDevOpsAttachment(JiraIssueNumber, imgFileName, imgAttachment.Value);
+                        }
+                    }
                 }
                 else
                 {
