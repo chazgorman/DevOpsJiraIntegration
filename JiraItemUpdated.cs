@@ -49,13 +49,6 @@ namespace lms
 
         public void SendDevOpsRequest(JiraIssueComment root)
         {
-            // Throw away non-public comments (identified by the jsdPublic field equal to false)
-            if (root.comment.jsdPublic.HasValue && root.comment.jsdPublic.Value == false)
-            {
-                _logger.LogInformation("Disarding non-public comment");
-                return;
-            }
-
             // If the comment was originally from DevOps, don't send to DevOps
             if (root.comment.body.StartsWith("DevOps Update"))
             {
@@ -123,19 +116,26 @@ namespace lms
             try
             {
                 string requestBody = new StreamReader(req.Body).ReadToEndAsync().Result;
-                dynamic data = JsonConvert.ToString(requestBody);
-
-                _logger.LogInformation("JiraItemUpdated Request Body: " + requestBody);
+                dynamic data = JsonConvert.ToString(requestBody);                
 
                 JiraIssueComment? rootJiraIssueComment = JsonConvert.DeserializeObject<JiraIssueComment>(requestBody);
 
                 if (rootJiraIssueComment != null)
                 {
+                    // Throw away non-public comments (identified by the jsdPublic field equal to false)
+                    if (rootJiraIssueComment.comment.jsdPublic.HasValue && rootJiraIssueComment.comment.jsdPublic.Value == false)
+                    {
+                        _logger.LogInformation("Disarding non-public comment");
+                        return new OkObjectResult("OK");
+                    }
+
+                    _logger.LogInformation("JiraItemUpdated Request Body: " + requestBody);
+
                     _logger.LogInformation("Received DevOpsItem " + rootJiraIssueComment?.issue.id);
                     string messageContent = $"{data}";
 
                     _logger.LogInformation("Sending create Jira item request");
-                    SendDevOpsRequest(rootJiraIssueComment);
+                    SendDevOpsRequest(rootJiraIssueComment);                    
                 }
                 else
                 {
