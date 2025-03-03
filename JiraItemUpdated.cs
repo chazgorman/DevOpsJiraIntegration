@@ -48,7 +48,14 @@ namespace lms
         }
 
         public void SendDevOpsRequest(JiraIssueComment root)
-        {            
+        {
+            // Throw away non-public comments (identified by the jsdPublic field equal to false)
+            if (root.comment.jsdPublic.HasValue && root.comment.jsdPublic.Value == false)
+            {
+                _logger.LogInformation("Disarding non-public comment");
+                return;
+            }
+
             // If the comment was originally from DevOps, don't send to DevOps
             if (root.comment.body.StartsWith("DevOps Update"))
             {
