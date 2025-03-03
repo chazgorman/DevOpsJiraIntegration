@@ -22,9 +22,17 @@ namespace VSCodeFunction
         [JsonPropertyName("description")]
         public string description;
 
+        [JsonProperty("components")]
+        [JsonPropertyName("components")]
+        public List<Component> components { get; set; }
+
+        [JsonProperty("customfield_10062")]
+        [JsonPropertyName("customfield_10062")]
+        public Customfield10062 customfield_10062 { get; set; }
+
         [JsonProperty("issuetype")]
         [JsonPropertyName("issuetype")]
-        public Issuetype issuetype;
+        public Issuetype issuetype { get; set; }
     }
 
     public class Issuetype
@@ -53,5 +61,19 @@ namespace VSCodeFunction
         [JsonProperty("body")]
         [JsonPropertyName("body")]
         public string body;
+    }
+
+    public class Component
+    {
+        [JsonProperty("name")]
+        [JsonPropertyName("name")]
+        public string name { get; set; }
+    }
+
+    public class Customfield10062
+    {
+        [JsonProperty("value")]
+        [JsonPropertyName("value")]
+        public string value { get; set; }
     }
 }

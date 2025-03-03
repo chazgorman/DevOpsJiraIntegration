@@ -55,14 +55,16 @@ namespace lms
             JiraFields jiraFields = new JiraFields();
             jiraFields.summary = "[DevOps " + root.resource.fields.SystemWorkItemType + ":" + root.resource.id.ToString() + "]: " + root.resource.fields.SystemTitle;
             jiraFields.description = root.detailedMessage.text;
+            jiraFields.components = new List<Component> { new Component() { name = "N/A" } };
+            jiraFields.customfield_10062 = new Customfield10062() { value = "CX Development" };
 
-            if(root.resource.fields.SystemWorkItemType == "Bug")
+            if (root.resource.fields.SystemWorkItemType == "Bug")
             {
-                jiraFields.issuetype = new Issuetype() { name = "Bug" };
+                jiraFields.issuetype = new Issuetype() { name = "CX Request" };
             }
             else
             {
-                jiraFields.issuetype = new Issuetype() { name = "Issue" };
+                jiraFields.issuetype = new Issuetype() { name = "CX Request" };
             }
             
             jiraFields.project = new JiraProject() { key = projectKey };
