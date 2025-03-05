@@ -68,7 +68,6 @@ namespace lms
                 _logger.LogInformation("DevOps User: " + user);
 
                 string? token = Utils.GetEnvironmentVariable("DevOpsToken");
-                _logger.LogInformation("DevOps Token: " + token);
 
                 string? url = Utils.GetEnvironmentVariable("DevOpsRootUrl");
                 _logger.LogInformation("DevOps Url: " + url);

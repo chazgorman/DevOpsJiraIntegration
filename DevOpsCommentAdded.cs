@@ -45,7 +45,6 @@ namespace lms
                 _logger.LogInformation("Jira User: " + user);
 
                 string? token = Utils.GetEnvironmentVariable("JiraToken");
-                _logger.LogInformation("Jira Token: " + token);
 
                 string? url = Utils.GetEnvironmentVariable("JiraRootUrl");
                 _logger.LogInformation("Jira Url: " + url);

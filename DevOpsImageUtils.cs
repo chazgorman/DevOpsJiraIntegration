@@ -72,7 +72,6 @@ namespace VSCodeFunction
                 _logger.LogInformation("DevOps User: " + user);
 
                 string? token = Utils.GetEnvironmentVariable("DevOpsToken");
-                _logger.LogInformation("DevOps Token: " + token);
 
                 string? url = Utils.GetEnvironmentVariable("DevOpsRootUrl");
                 _logger.LogInformation("DevOps Url: " + url);
@@ -134,7 +133,6 @@ namespace VSCodeFunction
             _logger.LogInformation("Jira User: " + user);
 
             string? token = Utils.GetEnvironmentVariable("JiraToken");
-            _logger.LogInformation("Jira Token: " + token);
 
             string? url = Utils.GetEnvironmentVariable("JiraRootUrl");
             _logger.LogInformation("Jira Url: " + url);
